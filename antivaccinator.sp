@@ -5,6 +5,10 @@
 #pragma newdecls required
 #pragma semicolon 1
 
+#define FIRST TFCond_Stealthed
+#define SECOND TFCond_RuneAgility
+#define THIRD TFCond_RunePrecision
+
 public Plugin myinfo =
 {
 	name = "Anti Vaccinator",
@@ -23,12 +27,13 @@ public Action TF2_OnAddCond(int client, TFCond &condition, float &time, int &pro
 	int healed = GetHealingTarget(client);
 	//bullet
 	if(condition == TFCond_UberBulletResist){
-		condition = TFCond_Ubercharged;
+		condition = TFCond_Stealthed;
+		time *= 2;
 		return Plugin_Changed;
 	}
 	//explosive
 	if(condition == TFCond_UberBlastResist){
-		condition = TFCond_Kritzkrieged;
+		condition = TFCond_RuneAgility;
 		return Plugin_Changed;
 	}
 	//fire
