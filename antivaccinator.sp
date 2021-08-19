@@ -4,17 +4,18 @@
 #include <tf2condhooks>
 #pragma newdecls required
 #pragma semicolon 1
+#pragma tabsize 0
 
-#define FIRST TFCond_Stealthed
-#define SECOND TFCond_RuneAgility
-#define THIRD TFCond_RunePrecision
+#define FIRST_CHARGE TFCond_Stealthed
+#define SECOND_CHARGE TFCond_SpeedBuffAlly
+#define THIRD_CHARGE TFCond_SwimmingNoEffects
 
 public Plugin myinfo =
 {
 	name = "Anti Vaccinator",
 	author = "Dooby Skoo",
 	description = "Changes the vaccinator",
-	version = "0.2.0",
+	version = "0.1.0",
 	url = "https://github.com//dewbsku"
 };
 
@@ -27,38 +28,70 @@ public Action TF2_OnAddCond(int client, TFCond &condition, float &time, int &pro
 	int healed = GetHealingTarget(client);
 	//bullet
 	if(condition == TFCond_UberBulletResist){
-		condition = TFCond_Stealthed;
+		condition = FIRST_CHARGE;
 		time *= 2;
 		return Plugin_Changed;
 	}
 	//explosive
 	if(condition == TFCond_UberBlastResist){
-		condition = TFCond_RuneAgility;
+		condition = SECOND_CHARGE;
 		return Plugin_Changed;
 	}
 	//fire
 	if(condition == TFCond_UberFireResist){
-		condition = TFCond_RunePrecision;
+		condition = THIRD_CHARGE;
 		return Plugin_Changed;
 	}
 }
 
-int GetHealingTarget(int client, bool checkgun = false)
+public Action OnPlayerRunCmd(int client, int& buttons, int& impulse, float vel[3], float angles[3], int& weapon, int& subtype, int& cmdnum, int& tickcount, int& seed, int mouse[2]){
+	if(buttons & IN_ATTACK2 && TF2_GetPlayerClass(client) == TFClass_Medic){
+		int healed = GetHealingTarget(client);
+		//if(healed!=-1) vaccMode[healed] = 0;
+		if(healed==-1 && TF2_IsPlayerInCondition(client, FIRST_CHARGE) && GetChargeType(client) == 1){
+			buttons -= IN_ATTACK2;
+			return Plugin_Continue;
+		}
+		else if(TF2_IsPlayerInCondition(client, FIRST_CHARGE) && TF2_IsPlayerInCondition(healed, FIRST_CHARGE) && GetChargeType(client) == 1){
+			buttons -= IN_ATTACK2;
+			return Plugin_Continue;
+		}
+
+		if(healed==-1 && TF2_IsPlayerInCondition(client, SECOND_CHARGE) && GetChargeType(client) == 2){
+			buttons -= IN_ATTACK2;
+			return Plugin_Continue;
+		}
+		else if(TF2_IsPlayerInCondition(client, SECOND_CHARGE) && TF2_IsPlayerInCondition(healed, SECOND_CHARGE) && GetChargeType(client) == 2){
+			buttons -= IN_ATTACK2;
+			return Plugin_Continue;
+		}
+
+		if(healed==-1 && TF2_IsPlayerInCondition(client, THIRD_CHARGE) && GetChargeType(client) == 3){
+			buttons -= IN_ATTACK2;
+			return Plugin_Continue;
+		}
+		else if(TF2_IsPlayerInCondition(client, THIRD_CHARGE) && TF2_IsPlayerInCondition(healed, THIRD_CHARGE) && GetChargeType(client) == 3){
+			buttons -= IN_ATTACK2;
+			return Plugin_Continue;
+		}
+	}
+	return Plugin_Continue;
+}
+
+
+int GetHealingTarget(int client, bool checkgun=true)
 {
-	int medigun = GetPlayerWeaponSlot(client, TFWeaponSlot_Secondary);
-	char weapon_classname[64];
-	GetEntityClassname( medigun, weapon_classname, sizeof weapon_classname );
-	if(!StrEqual(weapon_classname, "tf_weapon_medigun")) return -1;
-	if(!checkgun)
+    int medigun=GetPlayerWeaponSlot(client, TFWeaponSlot_Secondary);
+    if(!checkgun)
     {
         if(GetEntProp(medigun, Prop_Send, "m_bHealing"))
         {
-            return GetEntPropEnt(medigun, Prop_Send, "m_hHealingTarget");
-        }
-        return -1;
+			return GetEntPropEnt(medigun, Prop_Send, "m_hHealingTarget");
+		}
+		return -1;
     }
 
-	if(IsValidEdict(medigun))
+    if(IsValidEdict(medigun))
     {
         char classname[64];
         GetEdictClassname(medigun, classname, sizeof(classname));
@@ -66,13 +99,31 @@ int GetHealingTarget(int client, bool checkgun = false)
         {
             if(GetEntProp(medigun, Prop_Send, "m_bHealing"))
             {
-                return GetEntPropEnt(medigun, Prop_Send, "m_hHealingTarget");
+				return GetEntPropEnt(medigun, Prop_Send, "m_hHealingTarget");
             }
         }
     }
-	return -1;
+    return -1;
 }  
 
 bool IsValidClient(int client) {
 	return ( client > 0 && client <= MaxClients && IsClientInGame(client) );
+}
+
+int GetChargeType(int client){
+	int charge = -1;
+	int medigun = GetPlayerWeaponSlot(client, TFWeaponSlot_Secondary);
+	char classname[64];
+	GetEdictClassname(medigun, classname, sizeof(classname));
+	if(StrEqual("tf_weapon_medigun", classname)) charge = GetEntProp(medigun, Prop_Send, "m_nChargeResistType");
+	return charge;
+}
+
+void TF_AddUberLevel(int client, float uberlevel)
+{
+	int index = GetPlayerWeaponSlot(client, 1);
+	float currentuber = GetEntPropFloat(index, Prop_Send, "m_flChargeLevel");
+	if (index > 0){
+		SetEntPropFloat(index, Prop_Send, "m_flChargeLevel", currentuber + uberlevel);
+	}
 }
