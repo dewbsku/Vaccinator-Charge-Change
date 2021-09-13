@@ -7,15 +7,15 @@
 #pragma tabsize 0
 
 #define FIRST_CHARGE TFCond_StealthedUserBuffFade
-#define SECOND_CHARGE TFCond_KingAura
+#define SECOND_CHARGE TFCond_RegenBuffed
 #define THIRD_CHARGE TFCond_SwimmingNoEffects
 
 public Plugin myinfo =
 {
 	name = "Anti Vaccinator",
 	author = "Dooby Skoo",
-	description = "Changes the vaccinator",
-	version = "0.1.0",
+	description = "Removes the passive effects of the vaccinator and changes the three charges to offensive abilities.",
+	version = "1.0.0",
 	url = "https://github.com//dewbsku"
 };
 
