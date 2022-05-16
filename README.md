@@ -1,4 +1,4 @@
-# anti vaccinator
+# Vaccinator Charge Change
 
 This plugin turns the vaccinator's three charges into offensive tools.
 
